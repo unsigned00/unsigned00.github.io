@@ -4,21 +4,24 @@
   <meta charset="utf-8">
   
   
-  <title>win和Linux之间互传文件 | Hexo</title>
+  <title>win和Linux之间互传文件 | unsigned&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="hexo搭建在Linux盒子上，但主要工作在Windows上进行，并且Linux盒子性能不足够带动UI，所以写了一个脚本来实现Windows和Linux的文件互传，前提要配置机器间的ssh密钥对实现无密码登录，Windows上具有Bash环境（msys&#x2F;Git Bash）（所以就是正常的shell脚本，Linux也可以直接用来传输文件），本篇文章就是使用这个脚本在Windows完成并在Linux生">
 <meta property="og:type" content="article">
 <meta property="og:title" content="win和Linux之间互传文件">
 <meta property="og:url" content="http://example.com/2025/01/02/win%E5%92%8CLinux%E4%B9%8B%E9%97%B4%E4%BA%92%E4%BC%A0%E6%96%87%E4%BB%B6/index.html">
-<meta property="og:site_name" content="Hexo">
+<meta property="og:site_name" content="unsigned&#39;s blog">
 <meta property="og:description" content="hexo搭建在Linux盒子上，但主要工作在Windows上进行，并且Linux盒子性能不足够带动UI，所以写了一个脚本来实现Windows和Linux的文件互传，前提要配置机器间的ssh密钥对实现无密码登录，Windows上具有Bash环境（msys&#x2F;Git Bash）（所以就是正常的shell脚本，Linux也可以直接用来传输文件），本篇文章就是使用这个脚本在Windows完成并在Linux生">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-01-02T12:26:56.000Z">
-<meta property="article:modified_time" content="2025-01-02T13:05:37.209Z">
+<meta property="article:modified_time" content="2025-01-04T17:05:13.495Z">
 <meta property="article:author" content="unsigned">
+<meta property="article:tag" content="ssh">
+<meta property="article:tag" content="密钥登录">
+<meta property="article:tag" content="shell">
 <meta name="twitter:card" content="summary">
   
-    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+    <link rel="alternate" href="/atom.xml" title="unsigned's blog" type="application/atom+xml">
   
   
     <link rel="shortcut icon" href="/favicon.png">
@@ -43,7 +46,7 @@
   <div id="header-outer" class="outer">
     <div id="header-title" class="inner">
       <h1 id="logo-wrap">
-        <a href="/" id="logo">Hexo</a>
+        <a href="/" id="logo">unsigned&#39;s blog</a>
       </h1>
       
     </div>
@@ -95,6 +98,8 @@
       
         <p><code>hexo</code>搭建在<code>Linux</code>盒子上，但主要工作在<code>Windows</code>上进行，并且<code>Linux</code>盒子性能不足够带动<code>UI</code>，所以写了一个脚本来实现<code>Windows</code>和<code>Linux</code>的文件互传，前提要配置机器间的<code>ssh</code>密钥对实现无密码登录，<code>Windows</code>上具有<code>Bash</code>环境（<code>msys/Git Bash</code>）（所以就是正常的<code>shell</code>脚本，<code>Linux</code>也可以直接用来传输文件），本篇文章就是使用这个脚本在<code>Windows</code>完成并在<code>Linux</code>生成推送的</p>
 <p>这种在<code>Windows</code>的脚本似乎权限不太需要注意，我是直接新建文件就可以用了</p>
+<span id="more"></span>
+
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># remote ip</span></span><br><span class="line">ri=192.168.1.6</span><br><span class="line"><span class="comment"># remote user</span></span><br><span class="line">ru=root</span><br><span class="line"></span><br><span class="line"><span class="comment">#remote floder</span></span><br><span class="line">rf=/root/blog/</span><br><span class="line"><span class="comment"># local floder</span></span><br><span class="line">lf=./</span><br><span class="line"><span class="comment"># floder name</span></span><br><span class="line">fn=<span class="built_in">source</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">exec</span></span>() &#123;</span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;<span class="variable">$@</span>&quot;</span></span><br><span class="line">    <span class="string">&quot;<span class="variable">$@</span>&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">pull</span></span>() &#123;</span><br><span class="line">    tf=$(<span class="built_in">mktemp</span>)</span><br><span class="line">    <span class="built_in">echo</span> Pull <span class="variable">$lf</span>/<span class="variable">$fn</span> from <span class="variable">$rf</span>@<span class="variable">$ri</span>:<span class="variable">$rf</span>/<span class="variable">$fn</span> ...</span><br><span class="line">    <span class="built_in">echo</span> get -r <span class="variable">$rf</span>/<span class="variable">$fn</span> <span class="variable">$lf</span> &gt; <span class="variable">$tf</span></span><br><span class="line">    <span class="built_in">exec</span> sftp -b <span class="variable">$tf</span> <span class="variable">$ru</span>@<span class="variable">$ri</span></span><br><span class="line">    <span class="built_in">rm</span> <span class="variable">$tf</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">push</span></span>() &#123;</span><br><span class="line">    tf=$(<span class="built_in">mktemp</span>)</span><br><span class="line">    <span class="built_in">echo</span> Push <span class="variable">$lf</span>/<span class="variable">$fn</span> to <span class="variable">$ru</span>@<span class="variable">$ri</span>:<span class="variable">$rf</span>/<span class="variable">$fn</span> ...</span><br><span class="line">    <span class="built_in">echo</span> put -r <span class="variable">$lf</span>/<span class="variable">$fn</span> <span class="variable">$rf</span> &gt; <span class="variable">$tf</span></span><br><span class="line">    <span class="built_in">exec</span> sftp -b <span class="variable">$tf</span> <span class="variable">$ru</span>@<span class="variable">$ri</span></span><br><span class="line">    <span class="built_in">rm</span> <span class="variable">$tf</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="variable">$@</span>; <span class="keyword">do</span></span><br><span class="line">    <span class="keyword">case</span> <span class="variable">$i</span> <span class="keyword">in</span> </span><br><span class="line">        <span class="string">&quot;pull&quot;</span>) pull ;;</span><br><span class="line">        <span class="string">&quot;push&quot;</span>) push ;;</span><br><span class="line">        <span class="string">&quot;ssh&quot;</span>) <span class="built_in">exec</span> ssh <span class="variable">$ru</span>@<span class="variable">$ri</span> -t -t <span class="string">&quot;cd <span class="variable">$rf</span> &amp;&amp; bash&quot;</span> ;;</span><br><span class="line">        *) ;;</span><br><span class="line">    <span class="keyword">esac</span></span><br><span class="line"><span class="keyword">done</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
       
@@ -104,10 +109,26 @@
       
       
       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/shell/" rel="tag">shell</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ssh/" rel="tag">ssh</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%AF%86%E9%92%A5%E7%99%BB%E5%BD%95/" rel="tag">密钥登录</a></li></ul>
+
     </footer>
   </div>
   
     
+<nav id="article-nav">
+  
+    <a href="/2025/01/05/Compose%20%E4%B8%AD%E7%9A%84%20ViewModel%20%E5%92%8C%E7%8A%B6%E6%80%81/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">前一篇</strong>
+      <div class="article-nav-title">
+        
+          Compose 中的 ViewModel 和状态
+        
+      </div>
+    </a>
+  
+  
+</nav>
+
   
 </article>
 
@@ -120,9 +141,23 @@
 
   
     
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Compose/" rel="tag">Compose</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ViewModel/" rel="tag">ViewModel</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/shell/" rel="tag">shell</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ssh/" rel="tag">ssh</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AF%86%E9%92%A5%E7%99%BB%E5%BD%95/" rel="tag">密钥登录</a></li></ul>
+    </div>
+  </div>
+
 
   
     
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Android/" style="font-size: 10px;">Android</a> <a href="/tags/Compose/" style="font-size: 10px;">Compose</a> <a href="/tags/ViewModel/" style="font-size: 10px;">ViewModel</a> <a href="/tags/shell/" style="font-size: 10px;">shell</a> <a href="/tags/ssh/" style="font-size: 10px;">ssh</a> <a href="/tags/%E5%AF%86%E9%92%A5%E7%99%BB%E5%BD%95/" style="font-size: 10px;">密钥登录</a>
+    </div>
+  </div>
+
   
     
   <div class="widget-wrap">
@@ -139,6 +174,10 @@
     <h3 class="widget-title">最新文章</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2025/01/05/Compose%20%E4%B8%AD%E7%9A%84%20ViewModel%20%E5%92%8C%E7%8A%B6%E6%80%81/">Compose 中的 ViewModel 和状态</a>
+          </li>
         
           <li>
             <a href="/2025/01/02/win%E5%92%8CLinux%E4%B9%8B%E9%97%B4%E4%BA%92%E4%BC%A0%E6%96%87%E4%BB%B6/">win和Linux之间互传文件</a>
